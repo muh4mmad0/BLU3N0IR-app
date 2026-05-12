@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLU3N0IR — Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   BLU3N0IR — CYBERPUNK CALCULATOR STYLESHEET
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --neon:       #00d4ff;
+  --neon-dim:   #007a9a;
+  --neon-glow:  #00d4ff88;
+  --neon-deep:  #003d4d;
+  --bg:         #050a0f;
+  --bg2:        #080f16;
+  --bg3:        #0b1520;
+  --panel:      #0a141e;
+  --border:     #0e2030;
+  --text:       #c8e8f5;
+  --text-dim:   #4a7a94;
+  --red:        #ff3860;
+  --green:      #39ff7a;
+  --gold:       #ffd700;
+  --font-mono:  'Share Tech Mono', monospace;
+  --font-display: 'Orbitron', monospace;
+  --font-body:  'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+/* ── Scanlines overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 212, 255, 0.012) 2px,
+    rgba(0, 212, 255, 0.012) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Grid noise background ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ════════════════════════════════════════
+   LAYOUT
+   ════════════════════════════════════════ */
+
+.app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  gap: 12px;
+}
+
+/* ── Header / Logo ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  position: relative;
+}
+
+.header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(0,212,255,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-icon {
+  width: 44px; height: 44px;
+  position: relative;
+}
+
+.logo-icon svg { width: 100%; height: 100%; }
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--neon);
+  text-shadow: 0 0 20px var(--neon-glow), 0 0 40px rgba(0,212,255,0.3);
+}
+
+.logo-text span { color: #fff; }
+
+.logo-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.status-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+
+.mode-btn.active, .mode-btn:hover {
+  border-color: var(--neon);
+  color: var(--neon);
+  background: rgba(0,212,255,0.08);
+  text-shadow: 0 0 8px var(--neon-glow);
+}
+
+/* ── Main content ── */
+.main {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* ════════════════════════════════════════
+   CALCULATOR PANEL
+   ════════════════════════════════════════ */
+
+.calc-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 380px;
+  flex-shrink: 0;
+}
+
+/* ── Display ── */
+.display {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+  position: relative;
+  min-height: 110px;
+}
+
+.display::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 16px; height: 16px;
+  border-top: 2px solid var(--neon);
+  border-right: 2px solid var(--neon);
+}
+
+.display-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.display-expr {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  min-height: 18px;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.display-result {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--neon);
+  text-shadow: 0 0 20px var(--neon-glow);
+  text-align: right;
+  margin-top: 8px;
+  word-break: break-all;
+  transition: all 0.15s;
+  line-height: 1.1;
+}
+
+.display-result.error {
+  color: var(--red);
+  font-size: 18px;
+  text-shadow: 0 0 12px rgba(255,56,96,0.5);
+}
+
+.display-result.flash {
+  animation: result-flash 0.3s ease;
+}
+
+@keyframes result-flash {
+  0% { transform: scale(0.97); opacity: 0.5; }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Sci toggle bar ── */
+.sci-bar {
+  display: none;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sci-bar.visible { display: flex; }
+
+.sci-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 9px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--neon-dim);
+  background: rgba(0,122,154,0.1);
+  color: var(--neon);
+  cursor: pointer;
+  text-align: center;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+
+.sci-btn:hover {
+  background: rgba(0,212,255,0.18);
+  border-color: var(--neon);
+  text-shadow: 0 0 8px var(--neon);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,212,255,0.15);
+}
+
+.sci-btn:active { transform: translateY(0); }
+
+/* ── Button Grid ── */
+.btn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.btn {
+  padding: 16px 8px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  transition: all 0.12s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+}
+
+.btn:hover {
+  border-color: var(--neon-dim);
+  color: var(--neon);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,212,255,0.12), 0 0 0 1px var(--neon-dim);
+}
+
+.btn:active { transform: translateY(0); box-shadow: none; }
+
+/* Ripple */
+.btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0,212,255,0.25);
+  transform: scale(0);
+  animation: ripple-anim 0.4s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple-anim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* Button variants */
+.btn-op  { border-color: var(--neon-dim); color: var(--neon); background: rgba(0,122,154,0.12); }
+.btn-eq  {
+  background: linear-gradient(135deg, #006d82, #003d4d);
+  border-color: var(--neon);
+  color: var(--neon);
+  box-shadow: 0 0 20px rgba(0,212,255,0.2);
+  text-shadow: 0 0 10px var(--neon-glow);
+}
+.btn-eq:hover {
+  background: linear-gradient(135deg, #009bb8, #004f62);
+  box-shadow: 0 0 30px rgba(0,212,255,0.35);
+}
+.btn-clr { color: var(--red); border-color: rgba(255,56,96,0.4); background: rgba(255,56,96,0.06); }
+.btn-clr:hover { border-color: var(--red); box-shadow: 0 4px 16px rgba(255,56,96,0.15); }
+.btn-undo { color: var(--gold); border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.05); }
+.btn-undo:hover { border-color: var(--gold); color: var(--gold); }
+.btn-span2 { grid-column: span 2; }
+.btn-span4 { grid-column: span 4; }
+
+/* ════════════════════════════════════════
+   HISTORY PANEL
+   ════════════════════════════════════════ */
+
+.history-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+  position: relative;
+  min-height: 0;
+}
+
+.history-panel::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 20px; height: 20px;
+  border-top: 2px solid var(--neon);
+  border-right: 2px solid var(--neon);
+}
+
+.history-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.history-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--neon);
+  text-shadow: 0 0 8px var(--neon-glow);
+  flex: 1;
+}
+
+.history-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--bg3);
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+}
+
+/* Search bar */
+.search-bar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  transition: border-color 0.2s;
+}
+
+.search-input:focus { border-color: var(--neon-dim); }
+.search-input::placeholder { color: var(--text-dim); }
+
+.icon-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+
+.icon-btn:hover { border-color: var(--neon); color: var(--neon); }
+.icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* Action strip */
+.action-strip {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+
+.action-btn:hover { border-color: var(--neon); color: var(--neon); }
+.action-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* History list */
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.history-list::-webkit-scrollbar { width: 4px; }
+.history-list::-webkit-scrollbar-track { background: transparent; }
+.history-list::-webkit-scrollbar-thumb { background: var(--neon-dim); }
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-bottom-color: var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.history-item:hover {
+  background: rgba(0,212,255,0.04);
+  border-color: var(--border);
+  border-left-color: var(--neon-dim);
+}
+
+.history-item:hover .delete-btn { opacity: 1; }
+
+.history-num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.history-content { flex: 1; min-width: 0; }
+
+.history-expr {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-res {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--neon);
+  text-shadow: 0 0 8px var(--neon-glow);
+}
+
+.history-ts {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--text-dim);
+}
+
+.empty-icon {
+  font-size: 40px;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+/* ── Toast notification ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--panel);
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 12px 20px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  box-shadow: 0 0 20px rgba(0,212,255,0.2);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Keyboard hint footer ── */
+.footer {
+  padding: 6px 20px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.kbd-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.kbd-hint kbd {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  font-size: 9px;
+  color: var(--neon-dim);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--neon-dim); border-radius: 2px; }
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+  .main { flex-direction: column; }
+  .calc-panel { width: 100%; }
+  html, body { overflow: auto; }
+  .app { height: auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="logo">
+      <!-- SVG Logo -->
+      <div class="logo-icon">
+        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <!-- Outer hexagon frame -->
+          <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="none" stroke="#00d4ff" stroke-width="1.2" opacity="0.4"/>
+          <!-- Inner hexagon -->
+          <polygon points="22,8 36,16 36,28 22,36 8,28 8,16" fill="none" stroke="#00d4ff" stroke-width="0.8" opacity="0.3"/>
+          <!-- Center crosshair -->
+          <line x1="22" y1="14" x2="22" y2="30" stroke="#00d4ff" stroke-width="1" filter="url(#glow)"/>
+          <line x1="14" y1="22" x2="30" y2="22" stroke="#00d4ff" stroke-width="1" filter="url(#glow)"/>
+          <!-- Calc symbol dots -->
+          <rect x="13" y="13" width="4" height="4" fill="#00d4ff" opacity="0.8" rx="0.5"/>
+          <rect x="27" y="13" width="4" height="4" fill="#00d4ff" opacity="0.8" rx="0.5"/>
+          <rect x="13" y="27" width="4" height="4" fill="#00d4ff" opacity="0.4" rx="0.5"/>
+          <rect x="27" y="27" width="4" height="4" fill="#00d4ff" opacity="0.4" rx="0.5"/>
+          <!-- Center diamond -->
+          <polygon points="22,18 26,22 22,26 18,22" fill="#00d4ff" opacity="0.9" filter="url(#glow)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">BLU<span>3</span>N<span>0</span>IR</div>
+        <div class="logo-sub">DBMS PROJECT — CALC ENGINE v2.0</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-dot"></div>
+      <span class="status-label">SYSTEM ONLINE</span>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-basic" onclick="setMode('basic')">BASIC</button>
+        <button class="mode-btn" id="btn-sci" onclick="setMode('sci')">SCIENTIFIC</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- ── CALCULATOR ── -->
+    <div class="calc-panel">
+
+      <!-- Display -->
+      <div class="display">
+        <div class="display-label">► EXPRESSION</div>
+        <div class="display-expr" id="expr-display">&nbsp;</div>
+        <div class="display-result" id="result-display">0</div>
+      </div>
+
+      <!-- Scientific buttons (hidden by default) -->
+      <div class="sci-bar" id="sci-bar">
+        <button class="sci-btn" onclick="insertFunc('sin(')">sin</button>
+        <button class="sci-btn" onclick="insertFunc('cos(')">cos</button>
+        <button class="sci-btn" onclick="insertFunc('tan(')">tan</button>
+        <button class="sci-btn" onclick="insertFunc('sqrt(')">√</button>
+        <button class="sci-btn" onclick="insertFunc('log(')">log</button>
+        <button class="sci-btn" onclick="insertFunc('log10(')">log₁₀</button>
+        <button class="sci-btn" onclick="insertFunc('log2(')">log₂</button>
+        <button class="sci-btn" onclick="insertFunc('exp(')">eˣ</button>
+        <button class="sci-btn" onclick="insertSym('pi')">π</button>
+        <button class="sci-btn" onclick="insertSym('e')">e</button>
+        <button class="sci-btn" onclick="insertFunc('factorial(')">n!</button>
+        <button class="sci-btn" onclick="insertSym('**')">xⁿ</button>
+        <button class="sci-btn" onclick="insertFunc('degrees(')">deg</button>
+        <button class="sci-btn" onclick="insertFunc('radians(')">rad</button>
+        <button class="sci-btn" onclick="insertSym('%(')">mod</button>
+        <button class="sci-btn" onclick="insertSym('abs(')">|x|</button>
+      </div>
+
+      <!-- Button grid -->
+      <div class="btn-grid">
+        <button class="btn btn-clr btn-span2" onclick="clearAll()">CLR</button>
+        <button class="btn btn-undo" onclick="backspace()">⌫</button>
+        <button class="btn btn-op" onclick="appendOp('/')">÷</button>
+
+        <button class="btn" onclick="appendNum('7')">7</button>
+        <button class="btn" onclick="appendNum('8')">8</button>
+        <button class="btn" onclick="appendNum('9')">9</button>
+        <button class="btn btn-op" onclick="appendOp('*')">×</button>
+
+        <button class="btn" onclick="appendNum('4')">4</button>
+        <button class="btn" onclick="appendNum('5')">5</button>
+        <button class="btn" onclick="appendNum('6')">6</button>
+        <button class="btn btn-op" onclick="appendOp('-')">−</button>
+
+        <button class="btn" onclick="appendNum('1')">1</button>
+        <button class="btn" onclick="appendNum('2')">2</button>
+        <button class="btn" onclick="appendNum('3')">3</button>
+        <button class="btn btn-op" onclick="appendOp('+')">+</button>
+
+        <button class="btn" onclick="appendSym('(')">( </button>
+        <button class="btn" onclick="appendNum('0')">0</button>
+        <button class="btn" onclick="appendSym('.')">.</button>
+        <button class="btn btn-eq" onclick="calculate()">=</button>
+
+        <button class="btn btn-op btn-span2" onclick="appendSym(')')"> )</button>
+        <button class="btn btn-op btn-span2" onclick="appendOp('%')">%</button>
+      </div>
+    </div>
+
+    <!-- ── HISTORY PANEL ── -->
+    <div class="history-panel">
+      <div class="history-header">
+        <span class="history-title">► CALCULATION HISTORY</span>
+        <span class="history-count" id="history-count">0 records</span>
+      </div>
+
+      <div class="search-bar">
+        <input class="search-input" id="search-input" type="text"
+               placeholder="SEARCH EXPRESSIONS OR RESULTS..."
+               oninput="searchHistory(this.value)">
+        <button class="icon-btn" title="Refresh" onclick="loadHistory()">⟳</button>
+        <button class="icon-btn danger" title="Clear All" onclick="clearAllHistory()">🗑</button>
+      </div>
+
+      <div class="action-strip">
+        <button class="action-btn" onclick="exportFile('csv')">↓ CSV</button>
+        <button class="action-btn" onclick="exportFile('txt')">↓ TXT</button>
+        <div style="flex:1"></div>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">
+          CLICK ENTRY TO RECALL
+        </span>
+      </div>
+
+      <div class="history-list" id="history-list">
+        <div class="empty-state">
+          <div class="empty-icon">◈</div>
+          <div class="empty-text">NO RECORDS YET</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <span class="kbd-hint"><kbd>0-9</kbd> Numbers</span>
+    <span class="kbd-hint"><kbd>+ - * /</kbd> Operators</span>
+    <span class="kbd-hint"><kbd>Enter</kbd> Calculate</span>
+    <span class="kbd-hint"><kbd>Esc</kbd> Clear</span>
+    <span class="kbd-hint"><kbd>⌫</kbd> Backspace</span>
+    <span class="kbd-hint" style="margin-left:auto">BLU3N0IR © 2024 — DBMS PROJECT</span>
+  </footer>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  BLU3N0IR — Frontend Logic
+// ═══════════════════════════════════════════════════
+
+let expression = '';
+let lastResult = '';
+let sciMode = false;
+let historyData = [];
+
+// ── Display ──────────────────────────────────────────
+
+function updateDisplay() {
+  const exprEl = document.getElementById('expr-display');
+  const resEl  = document.getElementById('result-display');
+  exprEl.textContent = expression || '\u00A0';
+  resEl.textContent  = lastResult || '0';
+  resEl.classList.remove('error');
+}
+
+function setResultDisplay(val, isError=false) {
+  const el = document.getElementById('result-display');
+  el.textContent = val;
+  el.classList.toggle('error', isError);
+  el.classList.remove('flash');
+  void el.offsetWidth; // reflow
+  el.classList.add('flash');
+}
+
+// ── Input ─────────────────────────────────────────────
+
+function appendNum(n) {
+  if (lastResult && expression === '') {
+    // Starting fresh after a result
+  }
+  expression += n;
+  updateDisplay();
+  rippleEffect(event);
+}
+
+function appendOp(op) {
+  if (!expression && lastResult) {
+    expression = lastResult;
+  }
+  expression += op;
+  updateDisplay();
+  rippleEffect(event);
+}
+
+function appendSym(s) {
+  expression += s;
+  updateDisplay();
+  rippleEffect(event);
+}
+
+function insertFunc(fn) {
+  expression += fn;
+  updateDisplay();
+}
+
+function insertSym(s) {
+  expression += s;
+  updateDisplay();
+}
+
+function backspace() {
+  expression = expression.slice(0, -1);
+  updateDisplay();
+  rippleEffect(event);
+}
+
+function clearAll() {
+  expression = '';
+  lastResult = '';
+  document.getElementById('result-display').textContent = '0';
+  document.getElementById('result-display').classList.remove('error','flash');
+  document.getElementById('expr-display').textContent = '\u00A0';
+  rippleEffect(event);
+}
+
+// ── Calculate ─────────────────────────────────────────
+
+async function calculate() {
+  const expr = expression.trim();
+  if (!expr) return;
+
+  try {
+    const resp = await fetch('/api/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expression: expr })
+    });
+    const data = await resp.json();
+
+    if (data.error) {
+      setResultDisplay(data.error, true);
+      return;
+    }
+
+    document.getElementById('expr-display').textContent = expr + ' =';
+    lastResult = data.result;
+    setResultDisplay(data.result);
+    expression = '';
+    loadHistory();
+  } catch (e) {
+    setResultDisplay('CONNECTION ERR', true);
+  }
+}
+
+// ── Mode toggle ───────────────────────────────────────
+
+function setMode(mode) {
+  sciMode = (mode === 'sci');
+  document.getElementById('sci-bar').classList.toggle('visible', sciMode);
+  document.getElementById('btn-basic').classList.toggle('active', !sciMode);
+  document.getElementById('btn-sci').classList.toggle('active', sciMode);
+}
+
+// ── History ───────────────────────────────────────────
+
+async function loadHistory() {
+  try {
+    const r = await fetch('/api/history?limit=200');
+    const d = await r.json();
+    historyData = d.history;
+    renderHistory(historyData);
+  } catch(e) {}
+}
+
+async function searchHistory(query) {
+  if (!query.trim()) { renderHistory(historyData); return; }
+  try {
+    const r = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    const d = await r.json();
+    renderHistory(d.history);
+  } catch(e) {}
+}
+
+function renderHistory(records) {
+  const list  = document.getElementById('history-list');
+  const count = document.getElementById('history-count');
+  count.textContent = `${records.length} record${records.length !== 1 ? 's' : ''}`;
+
+  if (!records.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">◈</div>
+        <div class="empty-text">NO RECORDS YET</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = records.map((r, i) => `
+    <div class="history-item" onclick="recallCalc('${escHtml(r.expression)}', '${escHtml(r.result)}')">
+      <div class="history-num">${String(records.length - i).padStart(3,'0')}</div>
+      <div class="history-content">
+        <div class="history-expr">${escHtml(r.expression)}</div>
+        <div class="history-res">= ${escHtml(r.result)}</div>
+      </div>
+      <div class="history-ts">${formatTS(r.timestamp)}</div>
+      <button class="delete-btn" title="Delete" onclick="event.stopPropagation();deleteRecord(${r.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function recallCalc(expr, res) {
+  expression = expr;
+  lastResult = res;
+  updateDisplay();
+  toast(`Recalled: ${expr}`);
+}
+
+async function deleteRecord(id) {
+  await fetch(`/api/delete/${id}`, { method: 'DELETE' });
+  loadHistory();
+  toast('Record deleted');
+}
+
+async function clearAllHistory() {
+  if (!confirm('Delete ALL calculation history?')) return;
+  await fetch('/api/delete-all', { method: 'DELETE' });
+  loadHistory();
+  toast('History cleared');
+}
+
+function exportFile(fmt) {
+  window.location.href = `/api/export/${fmt}`;
+  toast(`Exporting ${fmt.toUpperCase()}...`);
+}
+
+// ── Helpers ───────────────────────────────────────────
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTS(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return isNaN(d) ? ts : d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = '► ' + msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function rippleEffect(e) {
+  if (!e || !e.currentTarget) return;
+  const btn = e.currentTarget;
+  const r = document.createElement('span');
+  r.classList.add('ripple');
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.width = r.style.height = size + 'px';
+  r.style.left = (e.clientX - rect.left - size/2) + 'px';
+  r.style.top  = (e.clientY - rect.top  - size/2) + 'px';
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 400);
+}
+
+// ── Keyboard support ──────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+
+  const key = e.key;
+  if (/^\d$/.test(key))   { expression += key; updateDisplay(); }
+  else if (key === '+')    { expression += '+'; updateDisplay(); }
+  else if (key === '-')    { expression += '-'; updateDisplay(); }
+  else if (key === '*')    { expression += '*'; updateDisplay(); }
+  else if (key === '/')    { e.preventDefault(); expression += '/'; updateDisplay(); }
+  else if (key === '.')    { expression += '.'; updateDisplay(); }
+  else if (key === '(')    { expression += '('; updateDisplay(); }
+  else if (key === ')')    { expression += ')'; updateDisplay(); }
+  else if (key === '%')    { expression += '%'; updateDisplay(); }
+  else if (key === 'Enter'|| key === '=') { calculate(); }
+  else if (key === 'Backspace') { expression = expression.slice(0,-1); updateDisplay(); }
+  else if (key === 'Escape')    { clearAll(); }
+});
+
+// ── Init ──────────────────────────────────────────────
+loadHistory();
+</script>
+</body>
+</html>
