@@ -17,6 +17,18 @@ DB_CONFIG = {
     "password": "dyfAhoMpHoNNdcVLMAInINIfQPtBPbEy",  # ← your MySQL password
     "database": "railway",
 }
+cursor = con.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS calculations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    expression VARCHAR(255),
+    result VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+con.commit()
 
 # ─── Schema ──────────────────────────────────────────────────────────────────s
 
