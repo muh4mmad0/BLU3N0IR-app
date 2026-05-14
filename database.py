@@ -11,11 +11,11 @@ from datetime import datetime
 # ─── MySQL Config — edit these before running ─────────────────────────────────
 
 DB_CONFIG = {
-    "host":     "localhost",
-    "port":     3306,
+    "host":     "yamanote.proxy.rlwy.net",
+    "port":     52909,
     "user":     "root",           # ← your MySQL username
-    "password": "soloq12",  # ← your MySQL password
-    "database": "blu3noir",
+    "password": "dyfAhoMpHoNNdcVLMAInINIfQPtBPbEy",  # ← your MySQL password
+    "database": "railway",
 }
 
 # ─── Schema ──────────────────────────────────────────────────────────────────s
